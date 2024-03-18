@@ -1,8 +1,8 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -std=gnu17 -O2
+CFLAGS = -Wall -Wextra -std=gnu17
 LDFLAGS = -lm
 
-SRCS = main.c utils.c sent.c receive.c
+SRCS = sent.c receive.c main.c
 OBJS = $(SRCS:.c=.o)
 TARGET = traceroute
 

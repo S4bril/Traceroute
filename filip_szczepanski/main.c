@@ -4,12 +4,76 @@ Nazwisko: Szczepanski
 Numer indeksu: 333262
 */
 
-#include "utils.h"
 #include "sent.h"
 #include "receive.h"
 
+#define IP4_MAX_LENGTH 20
+#define MIN_TTL 1
+#define MAX_TTL 30
+#define NUM_PAIRS 3
+#define BILLION 1000000000L
+
+struct timespec start_avg[3];
+struct timespec end_avg[3];
+char sender_ip[3][IP4_MAX_LENGTH];
+
+const char* get_input(int argc, char **argv){
+   if (argc == 1){
+      printf("You forgot to pass IP address\n");
+      return "";
+   }
+   else if (argc == 2){
+      char ip_address[INET_ADDRSTRLEN];
+      const char *ip_str = argv[1];
+      
+      if (inet_pton(AF_INET, ip_str, &ip_address) != 1) {
+         printf("The IP address \"%s\" is not valid.\n", ip_str);
+         return "";
+      }
+      return ip_str;
+   }
+   else{
+      printf("Too many arguments. Pass just IP address.\n");
+      return "";
+   }
+}
+
+double compute_average_difference(struct timespec start_times[], struct timespec end_times[]) {
+    double total_difference_ms = 0.0;
+
+    for (int i = 0; i < NUM_PAIRS; i++) {
+        double start_ns = (double)(start_times[i].tv_sec * BILLION + start_times[i].tv_nsec);
+        double end_ns = (double)(end_times[i].tv_sec * BILLION + end_times[i].tv_nsec);
+        double difference_ns = end_ns - start_ns;
+        total_difference_ms += difference_ns / 1000000.0;
+    }
+
+    double average_difference_ms = total_difference_ms / NUM_PAIRS;
+    return average_difference_ms;
+}
+
+void release_resources(int sockfd)
+{
+   close(sockfd);
+}
+
 int compute_time_diff(struct timespec start, struct timespec end){
    return (end.tv_sec - start.tv_sec) * 1000 + (end.tv_nsec - start.tv_nsec) / 1000000;
+}
+
+void print_path(int ttl, char sender_ip[3][IP4_MAX_LENGTH], int received){
+    printf("%d. ", ttl);
+    if(ttl < 10) { printf(" "); }
+    printf("%s ", sender_ip[0]);
+    if(received > 1){
+        if (strcmp(sender_ip[0], sender_ip[1]) != 0) {printf("%s ", sender_ip[1]);}
+    }
+    if(received > 2){
+        if (strcmp(sender_ip[0], sender_ip[2]) != 0 && strcmp(sender_ip[1], sender_ip[2]) != 0){
+            printf("%s ", sender_ip[2]);
+        }
+        printf(" %.3f ms\n", compute_average_difference(start_avg, end_avg));
+    }
 }
 
 int main(int argc, char **argv) {

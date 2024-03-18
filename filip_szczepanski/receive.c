@@ -6,6 +6,8 @@ Numer indeksu: 333262
 
 #include "receive.h"
 
+#define ICMP_TIME_EXCEEDED_OFFSET 28
+
 char* receive_ip_from_mesage(int sockfd, int ttl)
 {
       struct sockaddr_in sender;
@@ -28,8 +30,8 @@ char* receive_ip_from_mesage(int sockfd, int ttl)
       ssize_t	ip_header_len = 4 * (ssize_t)(ip_header->ip_hl);
 
       struct icmp* header = (struct icmp*)((uint8_t*)ip_header + ip_header_len);
-      if(header->icmp_type == 11){
-         header = (struct icmp*)((void*)header + 28);
+      if(header->icmp_type == ICMP_TIME_EXCEEDED){
+         header = (struct icmp*)((void*)header + ICMP_TIME_EXCEEDED_OFFSET);
       }
 
       if(header->icmp_hun.ih_idseq.icd_seq != ttl){
@@ -39,22 +41,7 @@ char* receive_ip_from_mesage(int sockfd, int ttl)
       return sender_ip_str;
 }
 
-void print_path(int ttl, char sender_ip[3][IP4_MAX_LENGTH], int received){
-   printf("%d. ", ttl);
-   if(ttl < 10) { printf(" "); }
-   printf("%s ", sender_ip[0]);
-   if(received > 1){
-      if (strcmp(sender_ip[0], sender_ip[1]) != 0) {printf("%s ", sender_ip[1]);}
-   }
-   if(received > 2){
-      if (strcmp(sender_ip[0], sender_ip[2]) != 0 && strcmp(sender_ip[1], sender_ip[2]) != 0){
-         printf("%s ", sender_ip[2]);
-      }
-      printf(" %.3f ms\n", compute_average_difference(start_avg, end_avg)); 
-   }
-}
-
-bool end_of_route(const char* ip_str, char sender_ip[3][IP4_MAX_LENGTH]){
+bool end_of_route(const char* ip_str, char sender_ip[3][20]){
       if (strcmp(sender_ip[0], ip_str) == 0
       || strcmp(sender_ip[1], ip_str) == 0
       || strcmp(sender_ip[2], ip_str) == 0) { return true; }
