@@ -8,7 +8,7 @@ Numer indeksu: 333262
 
 #define ICMP_TIME_EXCEEDED_OFFSET 28
 
-char* receive_ip_from_mesage(int sockfd, int ttl)
+char* receive_ip_from_mesage(int sockfd, int ttl, int id)
 {
       struct sockaddr_in sender;
       socklen_t sender_len = sizeof(sender);
@@ -27,14 +27,14 @@ char* receive_ip_from_mesage(int sockfd, int ttl)
 
       struct ip* ip_header = (struct ip*) buffer;
 
-      ssize_t	ip_header_len = 4 * (ssize_t)(ip_header->ip_hl);
+      ssize_t ip_header_len = 4 * (ssize_t)(ip_header->ip_hl);
 
       struct icmp* header = (struct icmp*)((uint8_t*)ip_header + ip_header_len);
       if(header->icmp_type == ICMP_TIME_EXCEEDED){
          header = (struct icmp*)((void*)header + ICMP_TIME_EXCEEDED_OFFSET);
       }
 
-      if(header->icmp_hun.ih_idseq.icd_seq != ttl){
+      if(header->icmp_hun.ih_idseq.icd_seq != ttl || header->icmp_hun.ih_idseq.icd_id != id){
          return "0";
       }
 

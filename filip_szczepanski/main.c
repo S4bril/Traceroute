@@ -154,8 +154,8 @@ int main(int argc, char **argv) {
          while(ready > 0){
             if (ps.revents & POLLIN){
                clock_gettime(CLOCK_MONOTONIC, &end_avg[received]);
-               char* caught  = receive_ip_from_mesage(sockfd, ttl);
-               if(strcmp(caught, "-1") == 0) { 
+               char* caught  = receive_ip_from_mesage(sockfd, ttl, getpid() & 0xFFFF);
+               if(strcmp(caught, "-1") == 0) {
                   fprintf(stderr, "recvfrom error: %s\n", strerror(errno)); 
                   release_resources(sockfd); 
                   return EXIT_FAILURE; 
